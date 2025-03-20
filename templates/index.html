@@ -14,27 +14,49 @@
                 <div class="card shadow">
                     <div class="card-body">
                         <h1 class="text-center mb-4">Text Analysis Tool</h1>
-                        <p class="text-center text-muted mb-4">Enter text to analyze sentiment, language, and emotions</p>
+                        <p class="text-center text-muted mb-4">Enter text or upload a document to analyze sentiment, language, and emotions</p>
                         
-                        <form id="analysisForm" class="mb-4">
-                            <div class="mb-3">
-                                <textarea 
-                                    class="form-control" 
-                                    id="textInput" 
-                                    rows="4" 
-                                    placeholder="Enter your text here..."
-                                    required></textarea>
-                            </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">Analyze Text</button>
-                            </div>
-                        </form>
+                        <!-- File Upload Section -->
+                        <div class="upload-section mb-4">
+                            <h4>Upload Document</h4>
+                            <form id="uploadForm" class="mb-3">
+                                <div class="mb-3">
+                                    <input type="file" class="form-control" id="fileInput" accept=".docx,.pdf" required>
+                                    <div class="form-text">Supported formats: DOCX, PDF</div>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-secondary">Analyze Document</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="divider mb-4">
+                            <span>OR</span>
+                        </div>
+
+                        <!-- Text Input Section -->
+                        <div class="text-input-section">
+                            <h4>Enter Text</h4>
+                            <form id="analysisForm" class="mb-4">
+                                <div class="mb-3">
+                                    <textarea 
+                                        class="form-control" 
+                                        id="textInput" 
+                                        rows="4" 
+                                        placeholder="Enter your text here..."
+                                        required></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Analyze Text</button>
+                                </div>
+                            </form>
+                        </div>
 
                         <div id="loading" class="text-center d-none">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
-                            <p class="mt-2">Analyzing text...</p>
+                            <p class="mt-2">Analyzing...</p>
                         </div>
 
                         <div id="result" class="d-none">
@@ -77,10 +99,30 @@
     </div>
 
     <script>
+        // Handle text analysis form
         document.getElementById('analysisForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            await analyzeText(document.getElementById('textInput').value);
+        });
+
+        // Handle file upload form
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
             
-            const textInput = document.getElementById('textInput');
+            if (!file) {
+                showError('Please select a file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            await analyzeFile(formData);
+        });
+
+        async function analyzeText(text) {
             const loading = document.getElementById('loading');
             const result = document.getElementById('result');
             const error = document.getElementById('error');
@@ -96,38 +138,77 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ text: textInput.value }),
+                    body: JSON.stringify({ text }),
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Display results
-                    document.getElementById('resultText').textContent = data.text;
-                    document.getElementById('resultSentiment').textContent = data.sentiment;
-                    document.getElementById('resultSentimentScore').textContent = 
-                        (data.sentiment_score * 100).toFixed(2) + '%';
-                    document.getElementById('resultLanguage').textContent = data.language;
-                    document.getElementById('resultLanguageScore').textContent = 
-                        (data.language_score * 100).toFixed(2) + '%';
-                    document.getElementById('resultEmotion').textContent = data.emotion;
-                    document.getElementById('resultEmotionScore').textContent = 
-                        (data.emotion_score * 100).toFixed(2) + '%';
-                    document.getElementById('resultTimestamp').textContent = data.timestamp;
-                    
+                    displayResults(data);
                     result.classList.remove('d-none');
                     error.classList.add('d-none');
                 } else {
                     throw new Error(data.error || 'An error occurred');
                 }
             } catch (err) {
-                error.textContent = err.message;
-                error.classList.remove('d-none');
-                result.classList.add('d-none');
+                showError(err.message);
             } finally {
                 loading.classList.add('d-none');
             }
-        });
+        }
+
+        async function analyzeFile(formData) {
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+            
+            // Reset UI
+            result.classList.add('d-none');
+            error.classList.add('d-none');
+            loading.classList.remove('d-none');
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data);
+                    result.classList.remove('d-none');
+                    error.classList.add('d-none');
+                } else {
+                    throw new Error(data.error || 'An error occurred');
+                }
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.classList.add('d-none');
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('resultText').textContent = data.text;
+            document.getElementById('resultSentiment').textContent = data.sentiment;
+            document.getElementById('resultSentimentScore').textContent = 
+                (data.sentiment_score * 100).toFixed(2) + '%';
+            document.getElementById('resultLanguage').textContent = data.language;
+            document.getElementById('resultLanguageScore').textContent = 
+                (data.language_score * 100).toFixed(2) + '%';
+            document.getElementById('resultEmotion').textContent = data.emotion;
+            document.getElementById('resultEmotionScore').textContent = 
+                (data.emotion_score * 100).toFixed(2) + '%';
+            document.getElementById('resultTimestamp').textContent = data.timestamp;
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.classList.remove('d-none');
+            document.getElementById('result').classList.add('d-none');
+        }
     </script>
 </body>
 </html> 
