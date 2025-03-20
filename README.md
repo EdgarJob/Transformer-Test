@@ -1,21 +1,24 @@
 # Sentiment Analysis Tool
 
-A Python-based sentiment analysis tool that uses BERT (Bidirectional Encoder Representations from Transformers) to analyze the sentiment of text input. This tool provides a user-friendly interface for analyzing text sentiment and saving the results.
+A Python-based sentiment analysis tool that uses BERT (Bidirectional Encoder Representations from Transformers) to analyze the sentiment of text input. This tool provides both a command-line interface and a modern web interface for analyzing text sentiment and saving the results.
 
 ## Features
 
 - Interactive command-line interface
+- Modern web interface with real-time analysis
 - Sentiment analysis using BERT model
 - Support for multiple languages
 - Results saving in JSON format
 - GPU acceleration support (if available)
 - Detailed sentiment scores and confidence levels
+- Responsive design that works on all devices
 
 ## Requirements
 
 - Python 3.x
 - transformers>=4.36.0
 - torch>=2.0.0
+- flask>=3.0.0
 
 ## Installation
 
@@ -32,6 +35,8 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Command Line Interface
+
 1. Run the script:
 ```bash
 python main.py
@@ -46,8 +51,25 @@ python main.py
 
 4. When exiting, you'll be prompted to save the results to a JSON file
 
+### Web Interface
+
+1. Start the Flask server:
+```bash
+python app.py
+```
+
+2. Open your web browser and navigate to:
+```
+http://localhost:5000
+```
+
+3. Enter your text in the text area and click "Analyze Sentiment"
+
+4. View the results instantly in the web interface
+
 ## Example Output
 
+### Command Line
 ```
 Using device: CPU
 
@@ -65,6 +87,14 @@ Sentiment: 5 stars
 Confidence Score: 0.9876
 ```
 
+### Web Interface
+The web interface provides a modern, user-friendly experience with:
+- Real-time sentiment analysis
+- Loading indicators
+- Error handling
+- Responsive design
+- Automatic result saving
+
 ## Model Details
 
 This tool uses the `nlptown/bert-base-multilingual-uncased-sentiment` model, which:
@@ -75,7 +105,10 @@ This tool uses the `nlptown/bert-base-multilingual-uncased-sentiment` model, whi
 
 ## File Structure
 
-- `main.py`: Main script containing the sentiment analysis implementation
+- `main.py`: Command-line interface implementation
+- `app.py`: Web interface implementation
+- `templates/index.html`: Web interface template
+- `static/css/style.css`: Custom styling for web interface
 - `requirements.txt`: List of Python dependencies
 - `*.json`: Generated result files (created when saving results)
 
